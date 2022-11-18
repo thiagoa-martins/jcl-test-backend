@@ -1,6 +1,5 @@
 const AppError = require("../utils/AppError");
 const knex = require("../database/knex");
-const sqliteConnection = require("../database/sqlite");
 
 class StudentsController {
   async create(request, response) {
@@ -32,11 +31,6 @@ class StudentsController {
   async update(request, response) {
     const { name, email } = request.body;
     const { id } = request.params;
-    // const student = await database.get(
-    //   "SELECT * FROM students WHERE id = (?)",
-    //   [id]
-    // );
-    const database = await sqliteConnection();
 
     const student = await knex("students").where({ id });
 
@@ -44,13 +38,11 @@ class StudentsController {
       throw new AppError("Usuário não encontrado.");
     }
 
-    // const studentByEmail = await database.get(
-    //   "SELECT * FROM students WHERE email = (?)",
-    //   [email]
-    // );
+    if (!name || !email) {
+      throw new AppError("Nome e e-mail são obrigatórios!");
+    }
 
     const studentByEmail = await knex("students").where({ email });
-    // console.log(studentByEmail);
 
     if (
       String(studentByEmail) &&
@@ -59,27 +51,9 @@ class StudentsController {
       throw new AppError("Este e-mail já está em uso.");
     }
 
-    // console.log(Boolean(String(studentByEmail),  studentByEmail[0]["id"], student[0]["id"]))
+    const updated_at = knex.fn.now();
 
-    student[0]["name"] = name ?? student[0]["name"];
-    student[0]["email"] = email ?? student[0]["email"];
-
-    const nameUpdated = student[0]["name"];
-    const emailUpdated = student[0]["email"];
-    // await database.run(
-    //   "UPDATE students SET name = ?, email = ?, updated_at = DATETIME('now') WHERE id = ?",
-    //   [nameUpdated, emailUpdated, id]
-    // );
-    const updated_at = Date.now();
-    // console.log(timestamp);
-
-    await knex("students")
-      .insert({
-        name: nameUpdated,
-        email: emailUpdated,
-        updated_at,
-      })
-      .where({ id });
+    await knex("students").where({ id }).update({ name, email, updated_at });
 
     response.json();
   }
