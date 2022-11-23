@@ -59,9 +59,17 @@ class StudentsController {
   }
 
   async index(request, response) {
-    const students = await knex("students").orderBy("id");
+    const studentsAndCourses = await knex("students")
+      .select([
+        "courses.title",
+        "students.course_id",
+        "students.name",
+        "students.email",
+      ])
+      .innerJoin("courses", "courses.id", "students.course_id")
+      .orderBy("title");
 
-    return response.json(students);
+    response.json(studentsAndCourses);
   }
 
   async show(request, response) {
