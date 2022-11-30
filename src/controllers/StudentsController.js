@@ -30,6 +30,7 @@ class StudentsController {
 
   async update(request, response) {
     const { name, email } = request.body;
+    let { course_id } = request.body;
     const { id } = request.params;
 
     const student = await knex("students").where({ id });
@@ -53,7 +54,9 @@ class StudentsController {
 
     const updated_at = knex.fn.now();
 
-    await knex("students").where({ id }).update({ name, email, updated_at });
+    course_id = course_id ?? student.course_id;
+
+    await knex("students").where({ id }).update({ name, email, updated_at, course_id });
 
     response.json();
   }
@@ -65,6 +68,7 @@ class StudentsController {
         "students.course_id",
         "students.name",
         "students.email",
+        "students.id",
       ])
       .innerJoin("courses", "courses.id", "students.course_id")
       .orderBy("title");
